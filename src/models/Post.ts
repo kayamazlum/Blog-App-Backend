@@ -3,7 +3,9 @@ import mongoose, { Schema, Document } from "mongoose";
 interface IPost extends Document {
   title: string;
   author: mongoose.Schema.Types.ObjectId;
-  content: string;
+  summary: string;
+  description: string;
+  images: string[];
   tags: string[];
   categories: string[];
   createdAt: Date;
@@ -18,7 +20,9 @@ const PostSchema = new Schema<IPost>(
       ref: "User",
       required: true,
     },
-    content: { type: String, required: true }, // HTML | Markdown
+    summary: { type: String, required: true },
+    description: { type: String, required: true }, // HTML
+    images: { type: [String], default: [] },
     tags: { type: [String], default: [] },
     categories: { type: [String], default: [] },
   },

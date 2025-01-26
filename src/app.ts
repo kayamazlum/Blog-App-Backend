@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import db from "./config/db";
 import postRoutes from "./routes/PostRoutes";
+import categoryRoutes from "./routes/CategoryRoutes";
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use(express.urlencoded({ extended: true }));
 db();
 
 app.use("/api/posts", postRoutes);
+app.use("/api/category", categoryRoutes);
 
 export default app;

@@ -1,6 +1,7 @@
 import { Request, Response, RequestHandler } from "express";
 import Post from "../models/Post";
 import mongoose from "mongoose";
+import moment from "moment";
 
 //ADD POST
 
@@ -43,8 +44,8 @@ export const getPosts: RequestHandler = async (
   try {
     const posts = await Post.find();
 
-    if (!posts) {
-      return res.status(404).json({ error: "Post not found." });
+    if (!posts || posts.length === 0) {
+      return res.status(200).json({ message: "Post not found.", posts: [] });
     }
 
     res.status(200).json({ posts });

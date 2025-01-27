@@ -6,8 +6,8 @@ interface IUser extends Document {
   email: string;
   password: string;
   proficePicture?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -15,8 +15,14 @@ const UserSchema = new Schema<IUser>(
     fullname: { type: String, require },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: true,
+      minlength: [8, "Password must be at least 8 characters long."],
+    },
     proficePicture: { type: String },
+    resetPasswordToken: { type: String },
+    resetPasswordExpire: { type: Date },
   },
   { timestamps: true }
 );

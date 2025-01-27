@@ -3,8 +3,6 @@ import { MONGO_URI } from "./config";
 
 const db = async (): Promise<void> => {
   try {
-    console.log("HAAAAA", MONGO_URI);
-
     if (!MONGO_URI) {
       throw new Error("MONGO_URI is not defined in the enviroment veriables");
     }

@@ -6,12 +6,13 @@ import {
   getPosts,
   updatePost,
 } from "../controllers/Post";
+import { verifyToken } from "../middleware/AuthMiddleware";
 const router = express.Router();
 
-router.post("/", createPost);
+router.post("/", verifyToken, createPost);
 router.get("/", getPosts);
-router.put("/:id", updatePost);
-router.delete("/:id", deletePost);
+router.put("/:id", verifyToken, updatePost);
+router.delete("/:id", verifyToken, deletePost);
 router.get("/:id", detailsPost);
 
 export default router;

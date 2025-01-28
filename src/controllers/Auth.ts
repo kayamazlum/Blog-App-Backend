@@ -3,6 +3,8 @@ import User from "../models/User";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendMail } from "../utils/SendMail";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET_KEY } from "../config/config";
 
 //USER REGISTER
 export const registerUser: RequestHandler = async (
@@ -53,7 +55,7 @@ export const registerUser: RequestHandler = async (
   }
 };
 
-//USER LOGIN
+// LOGIN USER
 export const loginUser: RequestHandler = async (
   req: Request,
   res: Response
@@ -81,9 +83,20 @@ export const loginUser: RequestHandler = async (
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    res
-      .status(200)
-      .json({ message: "Login successfully.", user: { id: user._id, email } });
+    //CREATE TOKEN
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      JWT_SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
+
+    res.status(200).json({
+      message: "Login successfully.",
+      user: { id: user._id, email },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to log in.", details: error });
   }

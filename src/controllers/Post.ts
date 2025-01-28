@@ -21,7 +21,7 @@ export const createPost: RequestHandler = async (
 
     const newPost = await Post.create({
       title,
-      author,
+      author: req.user?.id,
       summary,
       description,
       images,

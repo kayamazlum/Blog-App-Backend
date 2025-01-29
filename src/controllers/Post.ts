@@ -1,12 +1,15 @@
 import { Request, Response, RequestHandler } from "express";
 import Post from "../models/Post";
 import mongoose from "mongoose";
-import moment from "moment";
+// import moment from "moment";
 
+interface AuthRequest extends Request {
+  user?: { id: string };
+}
 //ADD POST
 
 export const createPost: RequestHandler = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<any> => {
   try {

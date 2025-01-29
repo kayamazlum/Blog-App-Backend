@@ -1,9 +1,13 @@
-import { RequestHandler, Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET_KEY } from "../config/config";
 
-export const verifyToken: RequestHandler = (
-  req: Request,
+interface AuthRequest extends Request {
+  user?: { id: string };
+}
+
+export const verifyToken = (
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): void => {

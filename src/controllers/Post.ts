@@ -45,7 +45,7 @@ export const getPosts: RequestHandler = async (
   res: Response
 ): Promise<any> => {
   try {
-    const posts = await Post.find();
+    const posts = await Post.find().populate("author", "fullname username");
 
     if (!posts || posts.length === 0) {
       return res.status(200).json({ message: "Post not found.", posts: [] });
@@ -121,7 +121,10 @@ export const detailsPost: RequestHandler = async (
       return res.status(400).json({ error: "Invalid Post ID." });
     }
 
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate(
+      "author",
+      "fullname username"
+    );
 
     if (!detailsPost) {
       return res.status(404).json({ error: "Post not found." });
@@ -130,5 +133,34 @@ export const detailsPost: RequestHandler = async (
     res.status(200).json({ post });
   } catch (error) {
     res.status(500).json({ error: "Post details could be not fetched." });
+  }
+};
+
+// GET USER POSTS
+export const getUserPosts: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid) {
+      return res.status(400).json({ error: "Invalid User ID." });
+    }
+
+    const posts = await Post.find({ author: userId }).populate(
+      "author",
+      "fullname username email"
+    );
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for this user." });
+    }
+
+    res.status(200).json({ posts });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to fetch user's posts.", details: error });
   }
 };

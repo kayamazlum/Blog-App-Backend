@@ -4,7 +4,6 @@ import {
   deletePost,
   detailsPost,
   getPosts,
-  getUserPosts,
   updatePost,
 } from "../controllers/Post";
 import { verifyToken } from "../middleware/AuthMiddleware";
@@ -15,6 +14,5 @@ router.get("/", getPosts);
 router.put("/:id", verifyToken, updatePost);
 router.delete("/:id", verifyToken, deletePost);
 router.get("/:id", detailsPost);
-router.get("/user/:userId", getUserPosts);
 
 export default router;

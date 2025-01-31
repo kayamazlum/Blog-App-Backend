@@ -6,6 +6,7 @@ import db from "./config/db";
 import postRoutes from "./routes/PostRoutes";
 import categoryRoutes from "./routes/CategoryRoutes";
 import authRoutes from "./routes/AuthRoutes";
+import userRoutes from "./routes/UserRoutes";
 
 const app = express();
 
@@ -18,5 +19,6 @@ db();
 app.use("/api/posts", postRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 export default app;

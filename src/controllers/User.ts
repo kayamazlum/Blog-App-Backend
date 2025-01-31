@@ -41,31 +41,42 @@ export const updateProfilePicture: RequestHandler = async (
   }
 };
 
-// GET USER POSTS
-export const getUserPosts: RequestHandler = async (
+//GET USER PROFILE (User info + User's posts)
+export const getUserProfile: RequestHandler = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid User ID." });
+    }
+
+    const user = await User.findById(id).select(
+      "-password -resetPasswordToken -resetPasswordExpire"
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
     }
 
     const posts = await Post.find({ author: id }).populate(
       "author",
-      "fullname username email"
+      "fullname username profilePicture"
     );
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({ message: "No posts found for this user." });
     }
 
-    res.status(200).json({ posts });
+    res.status(200).json({
+      user,
+      posts,
+    });
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Failed to fetch user's posts.", details: error });
+      .json({ error: "Failed to fetch user profile.", details: error });
   }
 };

@@ -1,5 +1,5 @@
 import express from "express";
-import { getUserPosts, updateProfilePicture } from "../controllers/User";
+import { getUserProfile, updateProfilePicture } from "../controllers/User";
 import UploadProfile from "../middleware/UploadProfile";
 import { verifyToken } from "../middleware/AuthMiddleware";
 
@@ -12,5 +12,5 @@ router.put(
   updateProfilePicture
 );
 
-router.get("/:id", getUserPosts);
+router.get("/:id", getUserProfile);
 export default router;

@@ -6,6 +6,7 @@ interface IUser extends Document {
   email: string;
   password: string;
   profilePicture?: string;
+  headerPicture?: string;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
 }
@@ -21,6 +22,7 @@ const UserSchema = new Schema<IUser>(
       minlength: [8, "Password must be at least 8 characters long."],
     },
     profilePicture: { type: String },
+    headerPicture: { type: String },
     resetPasswordToken: { type: String },
     resetPasswordExpire: { type: Date },
   },

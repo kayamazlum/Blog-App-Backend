@@ -5,7 +5,7 @@ import path from "path";
 import User from "../models/User";
 import Post from "../models/Post";
 
-// UPDATE PROFILE PICTURE
+// UPDATE USER PROFILE
 export const updateUserProfile: RequestHandler = async (
   req: Request,
   res: Response
@@ -14,23 +14,51 @@ export const updateUserProfile: RequestHandler = async (
     const userId = req.params.id;
     const { fullname, username, email } = req.body;
 
-    const user = await User.findById(userId);
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
 
+    const profileImage = files?.["profilePicture"]?.[0];
+    const headerImage = files?.["headerImage"]?.[0];
+
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    if (req.file?.filename) {
+    if (profileImage) {
       if (user.profilePicture) {
-        const oldImagePath = path.join(__dirname, "..", user.profilePicture);
-        await fs.remove(oldImagePath);
+        const oldProfilePath = path.join(__dirname, "..", user.profilePicture);
+        await fs.remove(oldProfilePath);
       }
-      user.profilePicture = `/uploads/profiles/${req.file.filename}`;
+      user.profilePicture = `/uploads/profiles/${profileImage.filename}`;
+    }
+
+    if (headerImage) {
+      if (user.headerPicture) {
+        const oldHeaderPath = path.join(__dirname, "..", user.headerPicture);
+        await fs.remove(oldHeaderPath);
+      }
+      user.headerPicture = `/uploads/headers/${headerImage.filename}`;
     }
 
     if (fullname) user.fullname = fullname;
-    if (username) user.username = username;
-    if (email) user.email = email;
+
+    if (username && username !== user.username) {
+      const existingUse = await User.findOne({ username });
+      if (existingUse) {
+        return res.status(400).json({ error: "Username is already token." });
+      }
+      user.username = username;
+    }
+
+    if (email && email !== user.email) {
+      const existingUse = await User.findOne({ email });
+      if (existingUse) {
+        return res.status(400).json({ error: "Email is already in use." });
+      }
+      user.email = email;
+    }
 
     await user.save();
 
@@ -41,6 +69,7 @@ export const updateUserProfile: RequestHandler = async (
         username: user.username,
         email: user.email,
         profilePicture: user.profilePicture,
+        headerPiture: user.headerPicture,
       },
     });
   } catch (error) {

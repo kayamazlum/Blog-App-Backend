@@ -6,9 +6,12 @@ import { verifyToken } from "../middleware/AuthMiddleware";
 const router = express.Router();
 
 router.put(
-  "/profile-picture/:id",
+  "/profile/:id",
   verifyToken,
-  UploadProfile.single("profilePicture"),
+  UploadProfile.fields([
+    { name: "profilePicture", maxCount: 1 },
+    { name: "headerPicture", maxCount: 1 },
+  ]),
   updateUserProfile
 );
 

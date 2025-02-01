@@ -6,33 +6,42 @@ import User from "../models/User";
 import Post from "../models/Post";
 
 // UPDATE PROFILE PICTURE
-export const updateProfilePicture: RequestHandler = async (
+export const updateUserProfile: RequestHandler = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
     const userId = req.params.id;
+    const { fullname, username, email } = req.body;
+
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded." });
+    if (req.file?.filename) {
+      if (user.profilePicture) {
+        const oldImagePath = path.join(__dirname, "..", user.profilePicture);
+        await fs.remove(oldImagePath);
+      }
+      user.profilePicture = `/uploads/profiles/${req.file.filename}`;
     }
 
-    if (user.profilePicture) {
-      const oldImagePath = path.join(__dirname, "..", user.profilePicture);
-      await fs.remove(oldImagePath);
-    }
+    if (fullname) user.fullname = fullname;
+    if (username) user.username = username;
+    if (email) user.email = email;
 
-    user.profilePicture = `/uploads/profiles/${req.file.filename}`;
     await user.save();
 
     res.status(200).json({
       message: "Profile picture uploated.",
-      profilePicture: user.profilePicture,
+      user: {
+        fullname: user.fullname,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture,
+      },
     });
   } catch (error) {
     res

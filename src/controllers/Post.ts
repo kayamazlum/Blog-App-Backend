@@ -1,25 +1,23 @@
 import { Request, Response, RequestHandler } from "express";
 import Post from "../models/Post";
 import mongoose from "mongoose";
-// import moment from "moment";
 
 interface AuthRequest extends Request {
   user?: { id: string };
 }
-//ADD POST
 
+// ADD POST
 export const createPost: RequestHandler = async (
   req: AuthRequest,
   res: Response
 ): Promise<any> => {
   try {
-    const { title, author, summary, description, images, tags, categories } =
-      req.body;
+    const { title, summary, description, images, tags, categories } = req.body;
 
-    if (!title || !author || !summary || !description) {
+    if (!title || !summary || !description) {
       return res
         .status(400)
-        .json({ error: "Title, author and content are required." });
+        .json({ error: "Title, summary, and description are required." });
     }
 
     const newPost = await Post.create({
@@ -34,31 +32,31 @@ export const createPost: RequestHandler = async (
 
     res.status(201).json(newPost);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create post.", details: error });
+    res.status(500).json({ error: "Failed to create post." });
   }
 };
 
-// GET ALL POST
-
+// GET ALL POSTS
 export const getPosts: RequestHandler = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    const posts = await Post.find().populate("author", "fullname username");
-
+    const posts = await Post.find()
+      .select("title summary tags categories createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .populate("author", "fullname username");
     if (!posts || posts.length === 0) {
-      return res.status(200).json({ message: "Post not found.", posts: [] });
+      return res.status(200).json({ message: "No posts found.", posts: [] });
     }
 
     res.status(200).json({ posts });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch post.", details: error });
+    res.status(500).json({ error: "Failed to fetch posts." });
   }
 };
 
 // UPDATE POST
-
 export const updatePost: RequestHandler = async (
   req: Request,
   res: Response
@@ -68,23 +66,24 @@ export const updatePost: RequestHandler = async (
     const updates = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid Post ID" });
+      return res.status(400).json({ error: "Invalid Post ID." });
     }
 
-    const updatePost = await Post.findByIdAndUpdate(id, updates, { new: true });
+    const updatedPost = await Post.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
 
-    if (!updatePost) {
+    if (!updatedPost) {
       return res.status(404).json({ error: "Post not found." });
     }
 
-    res.status(200).json(updatePost);
+    res.status(200).json(updatedPost);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update post.", details: error });
+    res.status(500).json({ error: "Failed to update post." });
   }
 };
 
 // DELETE POST
-
 export const deletePost: RequestHandler = async (
   req: Request,
   res: Response
@@ -96,20 +95,19 @@ export const deletePost: RequestHandler = async (
       return res.status(400).json({ error: "Invalid Post ID." });
     }
 
-    const deletePost = await Post.findByIdAndDelete(id);
+    const deletedPost = await Post.findByIdAndDelete(id);
 
-    if (!deletePost) {
+    if (!deletedPost) {
       return res.status(404).json({ error: "Post not found." });
     }
 
     res.status(200).json({ message: "Post deleted successfully." });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete post.", details: error });
+    res.status(500).json({ error: "Failed to delete post." });
   }
 };
 
-// DETAILS POST
-
+//  GET POST DETAILS
 export const detailsPost: RequestHandler = async (
   req: Request,
   res: Response
@@ -126,12 +124,38 @@ export const detailsPost: RequestHandler = async (
       "fullname username"
     );
 
-    if (!detailsPost) {
+    if (!post) {
       return res.status(404).json({ error: "Post not found." });
     }
 
     res.status(200).json({ post });
   } catch (error) {
-    res.status(500).json({ error: "Post details could be not fetched." });
+    res.status(500).json({ error: "Failed to fetch post details." });
+  }
+};
+
+// FILTERED POSTS (CATEGORY & TAG)
+export const getFilteredPost: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { category, tag } = req.query;
+    let filter: any = {};
+
+    if (category) {
+      filter.categories = {
+        $in: Array.isArray(category) ? category : [category],
+      };
+    }
+    if (tag) {
+      filter.tags = { $in: Array.isArray(tag) ? tag : [tag] };
+    }
+
+    const posts = await Post.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to filter posts.", details: error });
   }
 };

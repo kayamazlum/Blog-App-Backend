@@ -99,11 +99,10 @@ export const getUserProfile: RequestHandler = async (
       return res.status(404).json({ error: "User not found." });
     }
 
-    const posts = await Post.find({ author: id }).populate(
-      "author",
-      "fullname username profilePicture"
-    );
-
+    const posts = await Post.find({ author: id })
+      .select("title summary tags categories createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .populate("author", "fullname username profilePicture");
     if (!posts || posts.length === 0) {
       return res.status(404).json({ message: "No posts found for this user." });
     }

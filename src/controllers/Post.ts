@@ -1,6 +1,8 @@
 import { Request, Response, RequestHandler } from "express";
 import Post from "../models/Post";
 import mongoose from "mongoose";
+import { saveBase64Image } from "../utils/saveBase64Image";
+import { deleteFile } from "../utils/DeleteFile";
 
 interface AuthRequest extends Request {
   user?: { id: string };
@@ -11,8 +13,31 @@ export const createPost: RequestHandler = async (
   req: AuthRequest,
   res: Response
 ): Promise<any> => {
+  // try {
+  //   const { title, summary, description, images, tags, categories } = req.body;
+
+  //   if (!title || !summary || !description) {
+  //     return res
+  //       .status(400)
+  //       .json({ error: "Title, summary, and description are required." });
+  //   }
+
+  //   const newPost = await Post.create({
+  //     title,
+  //     author: req.user?.id,
+  //     summary,
+  //     description,
+  //     images,
+  //     tags,
+  //     categories,
+  //   });
+
+  //   res.status(201).json(newPost);
+  // } catch (error) {
+  //   res.status(500).json({ error: "Failed to create post." });
+  // }
   try {
-    const { title, summary, description, images, tags, categories } = req.body;
+    const { title, summary, description, tags, categories } = req.body;
 
     if (!title || !summary || !description) {
       return res
@@ -20,12 +45,28 @@ export const createPost: RequestHandler = async (
         .json({ error: "Title, summary, and description are required." });
     }
 
+    let updatedDescription = description;
+
+    // HTML içindeki base64 resimleri bul
+    const imgRegex =
+      /<img\s+src=["'](data:image\/[a-zA-Z+]+;base64,[^"']+)["']/g;
+    const matches = [...description.matchAll(imgRegex)];
+
+    for (const match of matches) {
+      const base64Data = match[1];
+      const imageUrl = await saveBase64Image(base64Data); // Base64'ü kaydet
+
+      if (imageUrl) {
+        // HTML içindeki eski src'yi güncelle
+        updatedDescription = updatedDescription.replace(base64Data, imageUrl);
+      }
+    }
+
     const newPost = await Post.create({
       title,
       author: req.user?.id,
       summary,
-      description,
-      images,
+      description: updatedDescription,
       tags,
       categories,
     });
@@ -63,19 +104,52 @@ export const updatePost: RequestHandler = async (
 ): Promise<any> => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const { title, summary, description, tags, categories } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid Post ID." });
     }
 
-    const updatedPost = await Post.findByIdAndUpdate(id, updates, {
-      new: true,
-    });
-
-    if (!updatedPost) {
+    const post = await Post.findById(id);
+    if (!post) {
       return res.status(404).json({ error: "Post not found." });
     }
+
+    let updatedDescription = description;
+    const oldDescription = post.description;
+
+    const oldImgRegex = /<img\s+src=["'](\/uploads\/posts\/[^"']+)["']/g;
+    const oldImages = [...oldDescription.matchAll(oldImgRegex)].map(
+      (match) => match[1]
+    );
+
+    const newImgRegex =
+      /<img\s+src=["'](data:image\/[a-zA-Z+]+;base64,[^"']+)["']/g;
+    const newMatches = [...description.matchAll(newImgRegex)];
+
+    for (const match of newMatches) {
+      const base64Data = match[1];
+      const imageUrl = await saveBase64Image(base64Data);
+
+      if (imageUrl) {
+        updatedDescription = updatedDescription.replace(base64Data, imageUrl);
+      }
+    }
+
+    const newImgTags = [...updatedDescription.matchAll(oldImgRegex)].map(
+      (match) => match[1]
+    );
+    const deletedImages = oldImages.filter((img) => !newImgTags.includes(img));
+
+    for (const image of deletedImages) {
+      await deleteFile(image);
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      { title, summary, description: updatedDescription, tags, categories },
+      { new: true }
+    );
 
     res.status(200).json(updatedPost);
   } catch (error) {
@@ -95,11 +169,21 @@ export const deletePost: RequestHandler = async (
       return res.status(400).json({ error: "Invalid Post ID." });
     }
 
-    const deletedPost = await Post.findByIdAndDelete(id);
-
-    if (!deletedPost) {
+    const post = await Post.findById(id);
+    if (!post) {
       return res.status(404).json({ error: "Post not found." });
     }
+
+    const imgRegex = /<img\s+src=["'](\/uploads\/posts\/[^"']+)["']/g;
+    const images = [...post.description.matchAll(imgRegex)].map(
+      (match) => match[1]
+    );
+
+    for (const image of images) {
+      await deleteFile(image);
+    }
+
+    await Post.findByIdAndDelete(id);
 
     res.status(200).json({ message: "Post deleted successfully." });
   } catch (error) {

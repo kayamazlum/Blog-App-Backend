@@ -12,7 +12,7 @@ export const updateUserProfile: RequestHandler = async (
 ): Promise<any> => {
   try {
     const userId = req.params.id;
-    const { fullname, username, email } = req.body;
+    const { fullname, username, email, biography, location } = req.body;
 
     const files = req.files as
       | { [fieldname: string]: Express.Multer.File[] }
@@ -44,6 +44,10 @@ export const updateUserProfile: RequestHandler = async (
 
     if (fullname) user.fullname = fullname;
 
+    if (biography) user.biography = biography;
+
+    if (location) user.location = location;
+
     if (username && username !== user.username) {
       const existingUse = await User.findOne({ username });
       if (existingUse) {
@@ -67,6 +71,8 @@ export const updateUserProfile: RequestHandler = async (
       user: {
         fullname: user.fullname,
         username: user.username,
+        biography: user.biography,
+        location: user.location,
         email: user.email,
         profilePicture: user.profilePicture,
         headerPiture: user.headerPicture,
@@ -102,7 +108,10 @@ export const getUserProfile: RequestHandler = async (
     const posts = await Post.find({ author: id })
       .select("title summary tags categories createdAt updatedAt")
       .sort({ createdAt: -1 })
-      .populate("author", "fullname username profilePicture");
+      .populate(
+        "author",
+        "fullname username profilePicture biography location"
+      );
     if (!posts || posts.length === 0) {
       return res.status(404).json({ message: "No posts found for this user." });
     }

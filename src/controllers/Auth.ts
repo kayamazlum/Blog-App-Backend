@@ -12,7 +12,8 @@ export const registerUser: RequestHandler = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { fullname, username, email, password } = req.body;
+    const { fullname, username, email, password, biography, location } =
+      req.body;
 
     if (!fullname || !username || !email || !password) {
       return res.status(400).json({ error: "All fields are required." });
@@ -44,6 +45,8 @@ export const registerUser: RequestHandler = async (
       username,
       email,
       password: hashedPassword,
+      biography,
+      location,
     });
 
     res.status(201).json({

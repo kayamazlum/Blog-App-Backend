@@ -13,29 +13,6 @@ export const createPost: RequestHandler = async (
   req: AuthRequest,
   res: Response
 ): Promise<any> => {
-  // try {
-  //   const { title, summary, description, images, tags, categories } = req.body;
-
-  //   if (!title || !summary || !description) {
-  //     return res
-  //       .status(400)
-  //       .json({ error: "Title, summary, and description are required." });
-  //   }
-
-  //   const newPost = await Post.create({
-  //     title,
-  //     author: req.user?.id,
-  //     summary,
-  //     description,
-  //     images,
-  //     tags,
-  //     categories,
-  //   });
-
-  //   res.status(201).json(newPost);
-  // } catch (error) {
-  //   res.status(500).json({ error: "Failed to create post." });
-  // }
   try {
     const { title, summary, description, tags, categories } = req.body;
 
